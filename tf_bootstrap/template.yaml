@@ -9,3 +9,49 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "tf-state-${AWS::AccountId}-01"
+
+  CanReadWriteTerraformStateBucket:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: CanReadWriteTerraformStateBucket
+      Description: Can read and write to Terraform state bucket
+      Path: /my-aws
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: s3:ListBucket
+            Resource: !GetAtt StateBucket.Arn
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "${StateBucket.Arn}/*"
+
+  GitpodOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://services.gitpod.io/idp
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList: 
+        - 08745487e891c19e3078c1f2a07e452950ef36f6
+
+  Gitpod:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "${GitpodOIDCProvider.Arn}/services.gitpod.io/idp
+            Action:
+              - sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                "services.gitpod.io/idp:aud": sts.amazonaws.com
+                "services.gitpod.io/idp:org_id": 436b3575-a5b0-4d3a-b4b3-d73e4238d6a1 # user id
+      Path: /my-aws
+      ManagedPolicyArns:
+        - !GetAtt CanReadWriteTerraformStateBucket.Arn
