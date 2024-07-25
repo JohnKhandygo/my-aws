@@ -15,7 +15,7 @@ Resources:
     Properties:
       ManagedPolicyName: CanReadWriteTerraformStateBucket
       Description: Can read and write to Terraform state bucket
-      Path: /my-aws
+      Path: /bootstrap/
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -40,18 +40,19 @@ Resources:
   Gitpod:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: Gitpod
+      Path: /bootstrap/gitpod/
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "${GitpodOIDCProvider.Arn}/services.gitpod.io/idp
+              Federated: !Ref GitpodOIDCProvider
             Action:
               - sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals:
                 "services.gitpod.io/idp:aud": sts.amazonaws.com
-                "services.gitpod.io/idp:org_id": 436b3575-a5b0-4d3a-b4b3-d73e4238d6a1 # user id
-      Path: /my-aws
+                "services.gitpod.io/idp:org_id": ae42117b-04b0-430f-8a1a-2a73ece6fa4c
       ManagedPolicyArns:
-        - !GetAtt CanReadWriteTerraformStateBucket.Arn
+        - !Ref CanReadWriteTerraformStateBucket
