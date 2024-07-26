@@ -51,8 +51,10 @@ Resources:
             Action:
               - sts:AssumeRoleWithWebIdentity
             Condition:
+              # NOTE: only the following claims can be used: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_iam-condition-keys.html#condition-keys-wif
               StringEquals:
                 "services.gitpod.io/idp:aud": sts.amazonaws.com
-                "services.gitpod.io/idp:org_id": ae42117b-04b0-430f-8a1a-2a73ece6fa4c
+              StringLike: 
+                "services.gitpod.io/idp:sub": https://github.com/JohnKhandygo/*
       ManagedPolicyArns:
         - !Ref CanReadWriteTerraformStateBucket
